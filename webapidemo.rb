@@ -1,5 +1,45 @@
-# webapidemo.rb
-# Simple Web Api demo.
+﻿# webapidemo.rb
+#
+# ChoiceView is a Communications-as-a-Service (CAAS) platform that allows visual information
+# to be sent from a contact center agent or IVR to mobile users equipped with the ChoiceView app.  
+#
+# Below is sample source code for an IVR script that enhances an existing IVR to become a
+# ChoiceView-enabled visual IVR.  The resulting visual IVR can send visual menus to the caller,
+# receive menu selections back from the caller, receive data entered by the caller and provide
+# visual responses to the caller, in addition to providing standard voice prompts and DTMF.
+#
+# The sample script below illustrates use of ChoiceView for implementing a simple visual IVR demo.
+# It's intended that the concepts and code provided herein can be used to create production visual
+# IVR scripts.
+#
+# The ChoiceView app is available for free at the Apple App Store and Android Market.  Once it's
+# installed on your mobile device, you can try the demo by calling 720-515-6994.
+#
+# Copyright © 2012 Radish Systems LLC
+# All rights reserved.
+# Learn more at www.radishsystems.com.
+#
+# Author: Darryl Jacobs <darryl@radishsystems.com>
+#
+# Tropo script showing how to use the ChoiceView IVR REST API to:
+#
+# 1. connect to a ChoiceView server
+# 2. register to receive notifications when the connection state changes
+# 3. send web pages to the client
+# 4. receive control notifications from the client when the user presses a button on the web page
+#
+# How to run this script:
+# Create a Tropo account, upload this script to the hosting area,
+# then add a new scripting application that loads this script.
+#
+# The web page referred to by the script is at
+# http://cvnet2.radishsystems.com/choiceview/ivr/api_button_demo.html
+# View the source of this page to see how the button links are coded.
+#
+# Contact Radish Systems at www.radishsystems.com/support/contact-radish-customer-support/
+# or support@radishsystems.com or darryl@radishsystems.com to get the information needed
+# to access the ChoiceView REST API.
+
 require 'rubygems'
 require 'json'
 require 'rest_client'
@@ -10,20 +50,32 @@ session_resource = nil
 message_resource = nil
 session_data = nil
 
-answer
-
-log 'Answered the call: $currentCall.callerId'
-
 # Start the ChoiceView session
+answer
+log 'Answered the call: $currentCall.callerId'
 say 'Welcome to the ChoiceView IVR Developer demonstration. Please wait while the ChoiceView session starts.'
 
 signalUri = "https://api.tropo.com/1.0/sessions/#{$currentCall.sessionId}/signals?action=signal&value="
 
 begin
-# Send the POST request that starts the session in background
+
+# The POST request that starts the session must run in background
+# while an ask command runs prompting the user to start the ChoiceView client
+# and press the start button to establish the connection.
+#
+# The rest_client gem is used to make the REST API calls.
+# More info on this gem is at http://github.com/archiloque/rest-client
+#
+# I'm sure there are Ruby Gems for doing asynchronous tasks, I'll update the code
+# when I find one that works with Tropo.
+
 Thread.abort_on_exception = true
 postThread = Thread.new do
   log 'Sending POST request to start ChoiceView session'
+
+  # The ChoiceView switch uses the mobile device phone number to connect the ChoiceView client
+  # data connection on the device to the voice call on the IVR.
+
   RestClient.post 'https://cvnet2.radishsystems.com/ivr/api/sessions',
     JSON(
       'callerId' => $currentCall.callerID, 
@@ -47,7 +99,7 @@ postThread = Thread.new do
       end
     end
 
-  # This will go away - signal should be sent by API, not the client
+  # This block will go away - signal should be sent by the API, not the Tropo script!
   if session_data['status'] == 'connected'
     log 'Send state_change signal to main thread'
     RestClient.get signalUri + 'state_change' do |response, request, result, &block|
@@ -62,7 +114,12 @@ postThread = Thread.new do
   end
 end
 
-# Tell the user to start the ChoiceView session
+# While waiting for the response to the POST request,
+# use an ask command to tell the user to start the ChoiceView session.
+# When the user starts the session, a signal is sent to Tropo that interrupts the ask command. 
+# If the user never starts a session, the request will time out either in the script or
+# on the ChoiceView switch.
+
 result = ask 'Go to the main screen of your mobile device, click on the ChoiceView client icon, then press start', {
   :allowSignals => [ 'state_change' ],
   :choices => '[1 DIGIT]',
@@ -71,7 +128,7 @@ result = ask 'Go to the main screen of your mobile device, click on the ChoiceVi
   :timeout => 10.0
 }
 
-# wait here until POST thread initializes the globals
+# wait here until POST thread ends
 postThread.join
 
 rescue Exception
@@ -80,11 +137,21 @@ rescue Exception
   raise
 end
 
-# Send the button demo page and loop until the user stops the demo
-if result.name == 'signal' || session_data
+# Send the button demo page to the mobile device,
+# then loop until the user stops the demo or the session ends or times out.
+
+unless session_data.nil?
+
   until session_data['status'] == 'disconnected'
+
     case session_data['status']
     when 'interrupted'
+      # Status is set to interrupted when the data connection to the ChoiceView client is
+      # temporarily unavailable.  This can happen if the mobile network connection fails,
+      # or if the user switches to another application on his device.  The switch will notify
+      # the script if the connection doesn't re-establish after a set period of time, or if
+      # the client has shut down the connection manually, or has shut down the ChoiceView client.
+
       result = ask 'Waiting for the mobile device to reconnect.', {
         :allowSignals => [ 'state_change' ],
         :choices => '[1 DIGIT]',
@@ -94,25 +161,36 @@ if result.name == 'signal' || session_data
         :onSignal => lambda do |signal|
           if signal.value == 'state_change'
             session_data = JSON(session_resource.get(:accept => :json).to_s)
-            log 'Session respresentation: ' + session_data.inspect
+            log 'Session representation: ' + session_data.inspect
             say 'Device has reconnected...' if session_data['status'] == 'connected'
           end
         end
       }
       log "Interrupted ask result: name is #{result.name}, value is #{result.value}."
+
       unless result.name == 'signal'
         session_resource.delete
         session_data['status'] = 'disconnected'
       end
+
     when 'connected'
-      # Always send the url, client may not have received it last time, or navigated away
+      # Always send the url before starting the voice prompt.
+      # The client may not have received the url the last time,
+      # or may have accessed a previously viewed page in the ChoiceView client.
+
       log 'Sending demo page to mobile client'
       session_resource.post(
         JSON('url' => hostUri + 'api_button_demo.html'),
         { :content_type => :json }
       )
-      # clients take finite time to receive and render the url, may want to delay the prompt for a short period.
-      # use network quality value to determine how long a delay is needed.
+
+      # (Advanced technique not in this version of the demo)
+      # ChoiceView clients can take several seconds to receive and render the url.
+      # Scripts may want to delay starting the voice prompt for a short period of time
+      # to keep the prompt in sync with the client display.
+      # You can use the network quality value in the session representation
+      # to determine how long a delay is needed.
+
       result = ask 'Please select one of the buttons. Button 3 will end this demo.', {
         :allowSignals => [ 'state_change', 'new_message' ],
         :choices => '[1 DIGIT]',
@@ -123,35 +201,40 @@ if result.name == 'signal' || session_data
           case signal.value
           when 'state_change'
             session_data = JSON(session_resource.get(:accept => :json).to_s)
-            log 'Session respresentation: ' + session_data.inspect
+            log 'Session representation: ' + session_data.inspect
           when 'new_message'
             msg_data = JSON(message_resource.get(:accept => :json).to_s)
-            log 'Message respresentation: ' + msg_data.inspect
+            log 'Message representation: ' + msg_data.inspect
             say "You pressed #{msg_data['buttonName']}."
             if msg_data['buttonNumber'] == '2'
               say 'This button ends the demo.'
               session_resource.delete
               session_data['status'] = 'disconnected'
-              next
             end
           end
         end
       }
       log "Connected ask result: name is #{result.name}, value is #{result.value}."
+
       unless result.name == 'signal'
         session_resource.delete
         session_data['status'] = 'disconnected'
       end
+
     when 'disconnected'
+      # The user or the switch ended the session on the mobile device
       say 'The ChoiceView server has ended the session.'
+
     else
+      # Should never see these states after the connection has been established.
       say 'Cannot communicate with the mobile device, try again later.'
       session_resource.delete
       session_data['status'] = 'disconnected'
     end
   end
+  log '----- Session ended -----'
 else
-  session_resource.delete if session_resource && session_data && session_data['status'] != 'disconnected' 
+  session_resource.delete unless session_resource.nil?
 end
 
 say 'The demo is ending now. Goodbye.'
