@@ -1,4 +1,4 @@
-﻿# webapidemo.rb
+# webapidemo.rb
 #
 # ChoiceView is a Communications-as-a-Service (CAAS) platform that allows visual information
 # to be sent from a contact center agent or IVR to mobile users equipped with the ChoiceView app.  
@@ -49,11 +49,10 @@ hostUri = 'http://cvnet2.radishsystems.com/ChoiceView/ivr/'
 session_resource = nil
 message_resource = nil
 session_data = nil
+actor = 'vanessa'
 
 # Start the ChoiceView session
-answer
-log 'Answered the call: $currentCall.callerId'
-say 'Welcome to the ChoiceView IVR Developer demonstration. Please wait while the ChoiceView session starts.'
+say('Welcome to the ChoiceView visual IVR demo from Radish Systems.', { :voice => actor })
 
 signalUri = "https://api.tropo.com/1.0/sessions/#{$currentCall.sessionId}/signals?action=signal&value="
 
@@ -120,7 +119,8 @@ end
 # If the user never starts a session, the request will time out either in the script or
 # on the ChoiceView switch.
 
-result = ask 'Go to the main screen of your mobile device, click on the ChoiceView client icon, then press start', {
+result = ask 'Stay on this call and return to the Home screen. Tap ChoiceView, then tap Start', {
+  :voice => actor,
   :allowSignals => [ 'state_change' ],
   :choices => '[1 DIGIT]',
   :mode => 'dtmf',
@@ -132,7 +132,7 @@ result = ask 'Go to the main screen of your mobile device, click on the ChoiceVi
 postThread.join
 
 rescue Exception
-  say 'Cannot connect to the ChoiceView server at this time.  Please try again later.'
+  say('Cannot connect to the ChoiceView server at this time.  Please try again later.', { :voice => actor })
   log "Exception while connecting to ChoiceView switch: #{$!}"
   raise
 end
@@ -153,6 +153,7 @@ unless session_data.nil?
       # the client has shut down the connection manually, or has shut down the ChoiceView client.
 
       result = ask 'Waiting for the mobile device to reconnect.', {
+        :voice => actor,
         :allowSignals => [ 'state_change' ],
         :choices => '[1 DIGIT]',
         :mode => 'dtmf',
@@ -162,7 +163,7 @@ unless session_data.nil?
           if signal.value == 'state_change'
             session_data = JSON(session_resource.get(:accept => :json).to_s)
             log 'Session representation: ' + session_data.inspect
-            say 'Device has reconnected...' if session_data['status'] == 'connected'
+            say('Device has reconnected...', { :voice => actor }) if session_data['status'] == 'connected'
           end
         end
       }
@@ -192,6 +193,7 @@ unless session_data.nil?
       # to determine how long a delay is needed.
 
       result = ask 'Please select one of the buttons. Button 3 will end this demo.', {
+        :voice => actor,
         :allowSignals => [ 'state_change', 'new_message' ],
         :choices => '[1 DIGIT]',
         :mode => 'dtmf',
@@ -205,9 +207,9 @@ unless session_data.nil?
           when 'new_message'
             msg_data = JSON(message_resource.get(:accept => :json).to_s)
             log 'Message representation: ' + msg_data.inspect
-            say "You pressed #{msg_data['buttonName']}."
+            say("You pressed #{msg_data['buttonName']}.", { :voice => actor })
             if msg_data['buttonNumber'] == '2'
-              say 'This button ends the demo.'
+              say('This button ends the demo.', { :voice => actor })
               session_resource.delete
               session_data['status'] = 'disconnected'
             end
@@ -223,11 +225,11 @@ unless session_data.nil?
 
     when 'disconnected'
       # The user or the switch ended the session on the mobile device
-      say 'The ChoiceView server has ended the session.'
+      say('The ChoiceView server has ended the session.', { :voice => actor })
 
     else
       # Should never see these states after the connection has been established.
-      say 'Cannot communicate with the mobile device, try again later.'
+      say('Cannot communicate with the mobile device, try again later.', { :voice => actor })
       session_resource.delete
       session_data['status'] = 'disconnected'
     end
@@ -237,5 +239,4 @@ else
   session_resource.delete unless session_resource.nil?
 end
 
-say 'The demo is ending now. Goodbye.'
-hangup
+say('Thank you for using ChoiceView. Goodbye.', { :voice => actor })
