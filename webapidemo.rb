@@ -184,7 +184,7 @@ unless session_data.nil?
 
       log 'Sending demo page to mobile client'
       session_resource.post(
-        JSON('url' => hostingUri + 'api_button_demo.html'),
+        JSON('url' => hostingUri + 'api_button_menu.html'),
         { :content_type => :json }
       )
 

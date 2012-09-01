@@ -1,0 +1,123 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<META HTTP-EQUIV="Pragma" CONTENT="no-cache">
+<title>ChoiceView Web API Demo</title>
+
+<style type="text/css">
+
+body {margin-top:7px; margin-left:7px; font-weight:normal; font-size:medium; font-family:sans-serif; color:#666666; width:97%;}
+
+a {text-decoration:none;}
+
+.header {display:block; width:97%; position:relative; background-color:#000; border-bottom:2px solid #E11F27;}
+.header img {width:25%; min-width:120px; max-width:190px;} 
+
+.footer {background-color:#000; border-top:1px solid #E12025; border-bottom:2px solid #000;}
+
+.heading1 {font-weight:bold; font-size:18px; font-family:sans-serif; color:#000000;}
+
+.text {font-weight:normal; font-size:14px; font-family:sans-serif; color:#000000;}
+
+.list {margin:0px 0px 0px 20px; padding:0px; list-style:square!important;}
+.img {max-width: 30%;}
+
+.space2line {padding:24px 0px 0px 0px;}
+
+.spaceline {padding:12px 0px 0px 0px;}
+
+.space8 {padding:8px 0px 0px 0px;}
+
+.space4 {padding:4px 0px 0px 0px;}
+
+.form {margin:0px; padding:0px;}
+
+
+
+
+@media screen and (max-width: 800px) {
+.heading2 {font-weight:bold; font-size:28px; font-family:sans-serif; color:#000000;}
+
+.heading3 {font-weight:bold; font-size:20px; font-family:sans-serif; color:#000000;}
+.smalltext {font-weight:normal; font-size:16px; font-family:sans-serif; color:#000000;}
+.button2 {background-color:#E12025; font-weight:bold; color:#FFF; border:2px solid #B91A1E; padding:2px 10px; text-decoration:none; text-align:left; display:block; font-size:24px; margin-bottom:10px; -webkit-appearance:none; -webkit-border-radius:6px; -moz-border-radius:6px; -webkit-tap-highlight-color:rgba(0,152,73,1); -moz-tap-highlight-color:rgba(0,152,73,1); width:92%;}
+
+
+}
+
+
+
+
+@media screen and (max-width: 480px) {
+html {
+-webkit-text-size-adjust: none;}
+.heading2 {font-weight:bold; font-size:16px; font-family:sans-serif; color:#000000;}
+
+.heading3 {font-weight:bold; font-size:14px; font-family:sans-serif; color:#000000;}
+
+.smalltext {font-weight:normal; font-size:12px; font-family:sans-serif; color:#000000;}
+.button2 {background-color:#E12025; font-weight:bold; color:#FFF; border:2px solid #B91A1E; padding:2px 10px; text-decoration:none; text-align:left; display:block; font-size:16px; margin-bottom:10px; -webkit-appearance:none; -webkit-border-radius:6px; -moz-border-radius:6px; -webkit-tap-highlight-color:rgba(0,152,73,1); -moz-tap-highlight-color:rgba(0,152,73,1); width:92%;}
+}
+
+
+
+</style>
+
+</head>
+<body>
+
+<div class="header"><img src="http://cvnet.radishsystems.com/choiceview/images/Radish_logo.gif" alt="Radish Systems"></div>
+
+<div class="space8"></div>
+
+<div class="heading2">ChoiceView&#0153; Web API Demo</div>
+
+<div class="spaceline"></div>
+<div class="space4"></div>
+
+<form action="choiceview://" method="get">
+<input type="hidden" name="calledPhoneNumber" value="controlMessage">
+<input type="hidden" name="MenuNumber" value="1">
+<input type="hidden" name="MenuName" value="Api_Button_Demo">
+<input type="hidden" name="ButtonNumber" value="0">
+<input type="hidden" name="ButtonName" value="Button 1">
+<input type="submit" value="Button 1" class="button2" ontouchstart="">
+</form>
+
+<div class="space8"></div>
+
+<form action="choiceview://" method="get">
+<input type="hidden" name="calledPhoneNumber" value="controlMessage">
+<input type="hidden" name="MenuNumber" value="1">
+<input type="hidden" name="MenuName" value="Api_Button_Demo">
+<input type="hidden" name="ButtonNumber" value="1">
+<input type="hidden" name="ButtonName" value="Button 2">
+<input type="submit" value="Button 2" class="button2" ontouchstart="">
+</form>
+
+<div class="space8"></div>
+
+<form action="choiceview://" method="get">
+<input type="hidden" name="calledPhoneNumber" value="controlMessage">
+<input type="hidden" name="MenuNumber" value="1">
+<input type="hidden" name="MenuName" value="Api_Button_Demo">
+<input type="hidden" name="ButtonNumber" value="2">
+<input type="hidden" name="ButtonName" value="Button 3">
+<input type="submit" value="Button 3" class="button2" ontouchstart="">
+</form>
+
+<div class="space8"></div>
+
+<div class="smalltext">ChoiceView is an enterprise-class app that brings a new dimension to consumer-to-business phone calls. Learn how easy it is to add ChoiceView to your business operations.</div>
+
+
+<div class="space8"></div>
+
+<div class="smalltext">Visit <a href="http://www.radishsystems.com" target="_blank">Radish Systems</a> for information about ChoiceView products and developer tools for smart mobile devices, contact centers, voice response systems and more.</div>
+
+
+
+</body>
+</html>
+
