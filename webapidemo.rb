@@ -44,7 +44,10 @@ require 'rubygems'
 require 'json'
 require 'rest_client'
 
-hostUri = 'http://cvnet2.radishsystems.com/ChoiceView/ivr/'
+hostingUri = 'https://cvnet2.radishsystems.com/Choiceview/ivr/'
+# Replace these values with the username and password must be provided by Radish Systems
+username = 'USERNAME'
+password = 'PASSWORD'
 
 session_resource = nil
 message_resource = nil
@@ -75,7 +78,7 @@ postThread = Thread.new do
   # The ChoiceView switch uses the mobile device phone number to connect the ChoiceView client
   # data connection on the device to the voice call on the IVR.
 
-  RestClient.post 'https://cvnet2.radishsystems.com/ivr/api/sessions',
+  RestClient.post "https://#{username}:#{password}@cvnet2.radishsystems.com/ivr/api/sessions",
     JSON(
       'callerId' => $currentCall.callerID, 
       'callId' => $currentCall.id,
@@ -86,12 +89,12 @@ postThread = Thread.new do
       case response.code
       when 201
         log '----- Session started -----'
-        session_resource = RestClient::Resource.new response.headers[:location]
+        session_resource = RestClient::Resource.new(response.headers[:location], :user => username, :password => password)
         session_data = JSON response.to_s
         log 'Session resource: ' + session_resource.inspect
         log 'Session representation: ' + session_data.inspect
         msgUriIndex = session_data['links'].find_index { |link| link['rel'].end_with?('controlmessage') }
-        message_resource = RestClient::Resource.new session_data['links'][msgUriIndex]['href'] if msgUriIndex
+        message_resource = RestClient::Resource.new(session_data['links'][msgUriIndex]['href'], :user => username, :password => password) if msgUriIndex
         log 'Message resource: ' + message_resource.inspect
       else
         raise 'Cannot start session - status code: ' + response.code.to_s
@@ -181,7 +184,7 @@ unless session_data.nil?
 
       log 'Sending demo page to mobile client'
       session_resource.post(
-        JSON('url' => hostUri + 'api_button_demo.html'),
+        JSON('url' => hostingUri + 'api_button_demo.html'),
         { :content_type => :json }
       )
 
